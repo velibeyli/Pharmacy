@@ -14,12 +14,15 @@ namespace Pharmacy2
 {
     public partial class SellMedicine : Form
     {
+        private Medicine OrderedMedicine;
+        private List<Medicine> orderedMedicines;
 
         private readonly PharmacyEntities1 _db;
         public SellMedicine()
         {
             InitializeComponent();
             _db = new PharmacyEntities1();
+            orderedMedicines = new List<Medicine>();
         }
 
         private void SellMedicine_Load(object sender, EventArgs e)
@@ -33,6 +36,7 @@ namespace Pharmacy2
 
             dgwMedicines.DataSource = byName.Intersect(byBarcode).Select(m => new
             {
+                m.ID,
                 m.Name,
                 m.Barcode,
                 m.Price,
@@ -40,7 +44,7 @@ namespace Pharmacy2
                 m.Volume,
                 Unit = m.Unit.Name
             }).ToList();
-
+            dgwMedicines.Columns[0].Visible = false;
         }
 
         private void txtSearchByName_TextChanged(object sender, EventArgs e)
@@ -53,6 +57,23 @@ namespace Pharmacy2
         {
             string barcode = txtSearchByBarcode.Text.Trim();
             UpdateMedicineDataGrid(barcode: barcode);
+        }
+
+        private void dgwMedicines_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            int id = (int)dgwMedicines.Rows[e.RowIndex].Cells[0].Value;
+
+            OrderedMedicine = _db.Medicines.Find(id);
+
+            txtMedicineName.Text = OrderedMedicine.Name;
+            txtBarcode.Text = OrderedMedicine.Barcode;
+            numCount.Maximum =Convert.ToDecimal( OrderedMedicine.Count);
+        }
+
+        private void numCount_ValueChanged(object sender, EventArgs e)
+        {
+            int count = (int)numCount.Value;
+            numPrice.Value = (decimal)(count * OrderedMedicine.Price);
         }
     }
 }
